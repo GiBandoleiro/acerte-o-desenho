@@ -1,0 +1,1149 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark"> <!-- PADRÃO É DARK MODE -->
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- Favicon (Ícone da Aba) -->
+    <link rel="icon" type="image/png" href="logoPincel.png">
+    <title>Desenhe e Adivinhe - App Store Ready</title>
+    <!-- Carrega Tailwind CSS para estilização -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap'); /* Fonte Poppins */
+        
+        /* Variáveis de Tema: Slate Minimalista */
+        :root {
+            --bg-color: #0c0c1e; 
+            --card-bg: #1f2937; 
+            --text-color: #f3f4f6; 
+            --primary-color: #3b82f6; 
+            --accent-color: #10b981; 
+            --shadow-color: rgba(0, 0, 0, 0.5);
+            --input-bg: #111827; 
+        }
+        
+        /* Estilos Base para Adaptação Total à Tela (Mobile First) */
+        html, body {
+            height: 100%;
+            width: 100%;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
+        body {
+            font-family: 'Poppins', sans-serif; 
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            transition: background-color 0.4s, color 0.4s;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh; 
+            padding: 1.5rem 0;
+        }
+        .container {
+            max-width: 1300px;
+            width: 98%;
+            background: var(--card-bg);
+            box-shadow: 0 15px 40px var(--shadow-color); 
+            border-radius: 1.5rem; 
+            padding: 2rem; 
+            margin: 0.5rem auto; 
+            display: flex; 
+            flex-direction: column;
+        }
+        /* CENTRALIZAÇÃO DE CONTEÚDO */
+        .content-container {
+            width: 100%;
+            margin: 0 auto; 
+            max-width: 95%;
+            display: flex; 
+            flex-direction: column;
+            align-items: center; 
+            justify-content: center;
+        }
+        /* Tela de Setup Centralizada e com largura máxima controlada */
+        #setup-screen {
+            max-width: 500px; 
+        }
+        
+
+        /* CARD STYLE APLICADO EM MUITOS ELEMENTOS */
+        .app-card {
+            background-color: var(--input-bg);
+            border-radius: 1rem;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            border: 1px solid #374151;
+            padding: 1.5rem; 
+        }
+        .input-text-dark {
+            background-color: var(--input-bg);
+            border: 2px solid #374151;
+            color: var(--text-color);
+        }
+
+        /* CANVAS CONTAINER: SEMPRE BRANCO */
+        .canvas-container {
+            border: 5px solid var(--primary-color); 
+            background-color: #ffffff; 
+            touch-action: none;
+            cursor: crosshair;
+            border-radius: 1.25rem;
+            overflow: hidden;
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.8); 
+            flex-grow: 1; 
+            max-width: 100%; 
+        }
+
+        /* GRADIENT BUTTON - INICIAR JOGO */
+        .btn-gradient-primary {
+            background-image: linear-gradient(45deg, #10b981, #3b82f6);
+            box-shadow: 0 6px 15px rgba(59, 130, 246, 0.5);
+            transition: all 0.3s ease;
+        }
+        .btn-gradient-primary:hover:not(:disabled) {
+            background-image: linear-gradient(45deg, #3b82f6, #10b981);
+            box-shadow: 0 8px 20px rgba(59, 130, 246, 0.7);
+            transform: translateY(-2px);
+        }
+        .btn-gradient-primary:disabled {
+            background: #4b5563; 
+            box-shadow: none;
+        }
+        
+        /* Estilos Padrão para Botões de Seleção (Pills) */
+        .select-pill {
+            background-color: #374151; 
+            color: var(--text-color);
+            border: 1px solid #475569;
+            transition: all 0.2s;
+        }
+        .select-pill:hover {
+            background-color: #4b5563;
+        }
+        .select-pill.active {
+            background-color: var(--primary-color);
+            color: white;
+            box-shadow: 0 0 8px rgba(59, 130, 246, 0.6);
+            border-color: var(--primary-color);
+            transform: scale(1.02); /* Suavizado */
+        }
+        
+        /* Estilo para Overlays */
+        #turn-reveal-overlay, #word-reveal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.95); 
+            z-index: 1000;
+            display: none;
+            place-items: center; 
+            animation: fadeIn 0.3s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+    </style>
+</head>
+<body class="selection:bg-blue-600 selection:text-white">
+
+    <!-- Overlay 1: Sua Vez (Aparece Primeiro) -->
+    <div id="turn-reveal-overlay">
+        <div class="text-center p-8 lg:p-12 rounded-xl bg-gray-900 shadow-2xl border-2 border-primary-color animate-pulse mx-4 max-w-lg">
+            <p class="text-3xl lg:text-4xl font-extrabold mb-4 text-gray-300">PREPARE-SE!</p>
+            <p class="text-5xl lg:text-6xl font-extrabold text-primary-color mb-6 tracking-wider" id="turn-drawer-name"></p>
+            <p class="text-xl text-gray-400">É a sua vez de desenhar!</p>
+        </div>
+    </div>
+
+    <!-- Overlay 2: Revelação da Palavra (Aparece em seguida) -->
+    <div id="word-reveal-overlay">
+        <div class="text-center p-8 lg:p-12 rounded-xl bg-gray-900 shadow-2xl border-2 border-red-500 mx-4 max-w-lg">
+            <p class="text-3xl lg:text-4xl font-extrabold mb-4 text-gray-300 animate-pulse">PALAVRA SECRETA</p>
+            <!-- PALAVRA SECRETA -->
+            <p class="text-6xl lg:text-7xl font-extrabold text-red-400 mb-2 tracking-widest" id="secret-word-overlay"></p>
+            <!-- TEMPO DE DESENHO (NOVO LOCAL) -->
+            <p class="text-xl text-gray-400 font-medium">Tempo: <span id="drawing-time-display" class="font-extrabold text-red-400">0s</span></p>
+
+            <p class="text-lg text-gray-500 mt-4">Memorize. O desenho começa em <span id="reveal-timer" class="font-extrabold text-white">3</span>s.</p>
+        </div>
+    </div>
+
+    <div id="app" class="container">
+        
+        <!-- Header com Título (Centralizado) -->
+        <header class="flex justify-center items-center mb-8 border-b pb-4 border-gray-700 w-full">
+            <h1 class="text-3xl lg:text-4xl font-extrabold text-primary-color tracking-wider text-center">DRAW & GUESS PRO</h1>
+        </header>
+
+        <!-- 1. Tela de Configuração (Alinhada e Minimalista) -->
+        <div id="setup-screen" class="space-y-8 content-container mx-auto">
+            <h2 class="text-3xl font-bold text-gray-100 border-b border-gray-700 pb-2 text-center w-full">Configuração do Jogo</h2>
+            
+            <!-- Entrada de Jogadores -->
+            <div id="players-input-container" class="space-y-4 app-card border-l-4 border-blue-600 w-full">
+                <label class="block text-xl font-bold text-gray-300 text-center">Jogadores Atuais (2–10)</label>
+                <div class="flex flex-wrap gap-3 mb-3 justify-center" id="player-list">
+                    <!-- Nomes dos jogadores serão adicionados aqui -->
+                </div>
+                <div id="player-input-group" class="relative">
+                    <!-- Input com Botão Integrado -->
+                    <input type="text" id="new-player-name" 
+                           placeholder="Nome do Jogador..." 
+                           onkeyup="if(event.key === 'Enter') addPlayer()"
+                           class="input-text-dark w-full p-3 pr-12 rounded-xl placeholder-gray-500 focus:ring-2 focus:ring-primary-color shadow-inner text-lg">
+                    <button id="add-player-btn" onclick="addPlayer()" class="bg-blue-600 text-white w-8 h-8 rounded-full font-bold text-xl hover:bg-blue-700 transition duration-200 shadow-lg flex items-center justify-center absolute right-2 top-1/2 transform -translate-y-1/2">
+                        +
+                    </button>
+                </div>
+            </div>
+
+            <!-- Opções de Rodadas, Tempo e Temas (Alinhado) -->
+            <div class="space-y-5 w-full">
+                
+                <!-- Modo de Rodadas (Botões) -->
+                <div class="app-card">
+                    <label class="block text-lg font-medium text-gray-300 mb-3 text-center">Modo de Rodadas</label>
+                    <div class="flex space-x-2 justify-center" id="round-mode-selector">
+                        <button onclick="setRoundMode('alternated', this)" data-mode="alternated" class="select-pill active px-4 py-2 rounded-full text-base font-semibold transition">Alternadas</button>
+                        <button onclick="setRoundMode('per_player', this)" data-mode="per_player" class="select-pill px-4 py-2 rounded-full text-base font-semibold transition">Por Jogador</button>
+                    </div>
+                </div>
+
+                <!-- Número de Rodadas (Slider) -->
+                <div class="app-card">
+                    <label for="num-rounds-slider" class="block text-lg font-medium text-gray-300 mb-4 text-center">
+                        Nº de Vezes: <span id="rounds-value" class="font-extrabold text-2xl text-primary-color">1</span>
+                    </label>
+                    <input type="range" id="num-rounds-slider" value="1" min="1" max="20" oninput="document.getElementById('rounds-value').textContent = this.value" class="w-full">
+                </div>
+                
+                <!-- Tempo por Rodada (Botões) -->
+                <div class="app-card">
+                    <label class="block text-lg font-medium text-gray-300 mb-3 text-center">Tempo de Desenho</label>
+                    <div class="flex space-x-3 flex-wrap justify-center" id="time-selector">
+                        <button onclick="setTimeOption('10', this)" data-time="10" class="select-pill px-4 py-2 rounded-full text-base transition">10s</button>
+                        <button onclick="setTimeOption('30', this)" data-time="30" class="select-pill active px-4 py-2 rounded-full text-base transition">30s</button>
+                        <button onclick="setTimeOption('60', this)" data-time="60" class="select-pill px-4 py-2 rounded-full text-base transition">60s</button>
+                        <button onclick="setTimeOption('random', this)" data-time="random" class="select-pill px-4 py-2 rounded-full text-base transition">Sorteado</button>
+                    </div>
+                </div>
+                
+                <!-- Temas de Palavras (Botões) -->
+                <div class="app-card">
+                    <label class="block text-lg font-medium text-gray-300 mb-3 text-center">Temas de Palavras (Selecione)</label>
+                    <div id="theme-selection" class="flex flex-wrap gap-3 justify-center">
+                        <!-- Botões de tema injetados aqui -->
+                    </div>
+                </div>
+            </div>
+
+            <button onclick="startGame()" id="start-game-btn" class="w-full text-white text-3xl p-5 rounded-xl font-extrabold btn-gradient-primary disabled:bg-gray-700 disabled:cursor-not-allowed shadow-xl tracking-wider">
+                INICIAR JOGO
+            </button>
+            <p id="setup-error" class="text-red-400 text-center font-medium hidden">Mínimo 2 jogadores e 1 tema selecionado são necessários.</p>
+        </div>
+
+        <!-- 2. Tela de Desenho -->
+        <div id="drawing-screen" class="hidden space-y-6 content-container">
+            
+            <!-- BARRA DE STATUS (TOPO) -->
+            <div class="flex flex-wrap justify-between items-center p-4 app-card border-l-4 border-primary-color text-base lg:text-xl w-full">
+                <div class="font-bold text-gray-300">Rodada <span id="current-round-display">1</span> / <span id="total-rounds-display">1</span></div>
+                <div class="font-extrabold text-red-400 text-xl lg:text-3xl animate-pulse">
+                    TEMPO: <span id="timer-display">0</span>s
+                </div>
+                <div class="font-bold text-gray-300">
+                    Desenhista: <span id="drawer-name" class="text-primary-color"></span>
+                </div>
+            </div>
+
+            <!-- GRID PRINCIPAL: CANVAS (2/3) + PLACAR (1/3) -->
+            <div class="grid lg:grid-cols-3 gap-6 w-full">
+                
+                <!-- COLUNA 1: CANVAS E FERRAMENTAS -->
+                <div class="lg:col-span-2 space-y-4 order-2 lg:order-1"> 
+                    <div id="canvas-container" class="canvas-container w-full aspect-[4/3] max-w-full mx-auto">
+                        <canvas id="drawing-canvas"></canvas>
+                    </div>
+                    
+                    <!-- CONTROLES DE DESENHO (Centralizado e Compacto) -->
+                    <div id="drawing-controls" class="flex flex-wrap gap-4 justify-center p-4 app-card transition duration-300 w-full mx-auto">
+                        
+                        <!-- Cor e Tamanho (Agrupados) -->
+                        <div class="flex items-center gap-3">
+                            <label for="color-picker" class="flex items-center text-gray-300 font-medium text-sm lg:text-base">Cor:</label>
+                            <input type="color" id="color-picker" value="#000000" title="Cor" class="w-10 h-10 lg:w-12 lg:h-12 rounded-full border-2 border-gray-500 cursor-pointer p-0 shadow-md">
+                        </div>
+
+                        <!-- SUBSTITUÍDO: Slider de Tamanho (Drag Slider) -->
+                        <div id="size-controls-slider" class="flex flex-col items-center justify-center w-32">
+                            <label for="brush-size-slider" class="text-gray-300 font-medium text-sm lg:text-base mb-1 whitespace-nowrap">
+                                Tamanho: <span id="brush-size-value" class="font-bold">5</span>
+                            </label>
+                            <input type="range" id="brush-size-slider" min="2" max="50" value="5" oninput="setSize(this.value)" class="w-full">
+                        </div>
+                        <!-- FIM DO SLIDER -->
+
+                        <span class="border-l border-gray-700 mx-3 hidden sm:inline-block"></span>
+                        
+                        <!-- Ferramentas (Ícones Limpos) -->
+                        <button onclick="setMode('pen')" id="pen-btn" class="tool-btn active p-3 bg-blue-700 text-white rounded-xl font-semibold transition duration-200 flex items-center shadow-lg text-base" title="Pincel">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.536l12.232-12.232z"></path></svg>
+                        </button>
+
+                        <button onclick="setMode('eraser')" id="eraser-btn" class="tool-btn p-3 bg-yellow-500 text-white rounded-xl font-semibold hover:bg-yellow-600 transition duration-200 flex items-center shadow-lg text-base" title="Borracha">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        </button>
+                        
+                        <button onclick="setMode('fill')" id="fill-btn" class="tool-btn p-3 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 transition duration-200 flex items-center shadow-lg text-base" title="Preencher">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414l2.828 2.828m-2.828-2.828L11 5m1.414 1.414L15 9.828m-4.242-4.242L11 5m1.414 1.414l-4.242 4.242m0 0l-1.414 1.414M18 10v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4"></path></svg>
+                        </button>
+                        
+                        <button onclick="clearCanvas()" class="p-3 bg-gray-500 text-white rounded-xl font-semibold hover:bg-gray-600 transition duration-200 flex items-center shadow-lg text-base" title="Limpar Tudo">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- COLUNA 2: PLACAR (Sempre visível) -->
+                <div class="lg:col-span-1 space-y-4 order-1 lg:order-2">
+                    <div class="p-5 app-card border-l-4 border-yellow-500 w-full">
+                        <h3 class="text-xl font-bold text-gray-100 mb-4 tracking-wide">PLACAR ATUAL</h3>
+                        <div id="score-board" class="space-y-3">
+                            <!-- Placar é atualizado aqui -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. Tela de Adivinhação (Apenas Desenho e Palpites - Minimalista) -->
+        <div id="guessing-screen" class="hidden space-y-6 content-container max-w-4xl">
+            <h3 class="text-3xl font-bold text-gray-100 mb-5 tracking-wide border-b border-gray-700 pb-3 w-full text-center">ADIVINHE A PALAVRA!</h3>
+
+            <!-- Área do Desenho Final (Garantindo que não seja cortado) -->
+            <div class="canvas-container w-full aspect-[4/3] max-w-full mx-auto flex items-center justify-center">
+                <canvas id="final-drawing-canvas"></canvas>
+            </div>
+            
+            <!-- Campos de Palpite (Centralizados) -->
+            <div id="guesser-inputs-container" class="space-y-4 app-card w-full">
+                <p id="guessing-prompt" class="text-base text-gray-400 font-medium mb-4 text-center">Você tem 3 chutes por pessoa.</p>
+                <div id="guesser-inputs" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <!-- Campos de palpite são injetados aqui -->
+                </div>
+            </div>
+            <button onclick="forceEndRound()" class="mt-5 bg-red-600 text-white p-3 rounded-xl font-bold hover:bg-red-700 transition duration-200 shadow-lg text-base">
+                Encerrar Rodada (Todos desistiram)
+            </button>
+        </div>
+
+
+        <!-- 4. Tela de Fim de Rodada (Visual Aprimorado e Palavra Destacada) -->
+        <div id="round-end-screen" class="hidden text-center p-10 app-card border-4 border-green-500 content-container max-w-xl mx-auto">
+            <h2 class="text-3xl lg:text-4xl font-extrabold text-green-400 mb-8 tracking-widest">FIM DA RODADA! 🎉</h2>
+            <div class="mb-8 p-6 bg-gray-900 rounded-xl shadow-inner border border-green-700">
+                <p class="text-xl text-gray-300 mb-4 font-semibold">A palavra secreta era:</p>
+                <!-- PALAVRA BEM GRANDE -->
+                <p id="final-word" class="text-red-400 font-extrabold text-6xl lg:text-7xl tracking-widest"></p>
+            </div>
+
+            <div id="round-winners" class="space-y-4 text-left inline-block bg-gray-900 p-8 rounded-xl shadow-xl w-full border border-gray-700">
+                <p class="font-extrabold text-xl lg:text-2xl text-gray-100 border-b pb-3 mb-4 border-gray-700">Pontuação da Rodada:</p>
+                
+                <div id="drawer-score-visual" class="flex justify-between items-center text-lg lg:text-xl p-3 bg-blue-900/50 rounded-lg border border-blue-600 mb-4">
+                    <span class="font-bold text-blue-300">Desenhista: <span id="drawer-name-end"></span></span>
+                    <span id="drawer-score-earned" class="font-extrabold text-white"></span>
+                </div>
+
+                <ul id="correct-guesses-list" class="space-y-3 text-gray-300 text-lg">
+                    <!-- Acertos são listados aqui com visual de pontuação -->
+                </ul>
+            </div>
+            
+            <div class="flex justify-center mt-10 w-full">
+                <button onclick="nextRound()" class="bg-blue-600 text-white text-2xl p-4 rounded-xl font-bold hover:bg-blue-700 transition duration-300 shadow-xl min-w-[250px] tracking-wider">
+                    PRÓXIMA RODADA
+                </button>
+            </div>
+        </div>
+
+        <!-- 5. Tela de Fim de Jogo -->
+        <div id="game-end-screen" class="hidden text-center p-10 app-card border-4 border-purple-500 content-container max-w-xl mx-auto">
+            <h2 class="text-3xl lg:text-4xl font-extrabold text-purple-400 mb-8 tracking-widest">FIM DE JOGO! 🏆</h2>
+            <h3 class="text-2xl font-semibold text-gray-100 mb-6">Ranking Final</h3>
+            <div id="final-ranking" class="space-y-4 mx-auto w-full">
+                <!-- Ranking é exibido aqui -->
+            </div>
+            
+            <button onclick="location.reload()" class="mt-8 w-full bg-accent-color text-white text-xl p-4 rounded-xl font-bold hover:bg-green-700 transition duration-200 shadow-xl tracking-wider">
+                JOGAR DE NOVO
+            </button>
+        </div>
+        
+    </div>
+
+    <script>
+        // Variáveis Globais de Estado do Jogo
+        let gameState = {
+            players: [], 
+            numRoundsPerPlayer: 1,
+            totalRounds: 0,
+            currentRound: 0,
+            timeOption: '30',
+            roundMode: 'alternated', 
+            drawerIndex: 0,
+            wordToDraw: '',
+            timer: null,
+            timeLeft: 0, 
+            drawerId: null,
+            playersWhoGuessed: new Set(),
+            hasDrawerScored: false,
+            isDrawingPhase: true, 
+            selectedThemes: [],
+            drawerHistory: {}, 
+        };
+
+        // Constantes de Pontuação
+        const SCORE_DRAWER = 100;
+        const SCORE_GUESSER_BASE = 60;
+        const SCORE_BONUS_PER_SEC = 2; 
+        const SCORE_PENALTY = 10; 
+        const SCORE_PERFECT_GUESS = 50; 
+        const REVEAL_TIME = 3; 
+        
+        // Variáveis do Canvas
+        let canvas, ctx;
+        let isDrawing = false;
+        let lastX = 0;
+        let lastY = 0;
+        let color = '#000000';
+        let size = 5; 
+        let mode = 'pen'; 
+        let canvasDrawingData = null; 
+        
+        // --- Dicionário de Palavras (Mantido por ser extenso e completo) ---
+        const WORD_CATEGORIES = {
+            "Objetos": ["Cadeira", "Mesa", "Lápis", "Relógio", "Livro", "Tesoura", "Óculos", "Martelo", "Chave", "Travesseiro", "Espelho", "Vaso", "Garrafa", "Toalha", "Vela", "Escada", "Corda", "Carrinho", "Boneca", "Bola", "Telefone", "Faca", "Copo", "Prato", "Microfone", "Ventilador", "Calendário", "Caderno", "Pena", "Lupa", "Lanterna", "Balão", "Cofre", "Gaveta", "Caixa", "Porta", "Janela", "Pincel", "Teclado", "Mouse", "Impressora", "Monitor", "Fio", "Tomada", "Régua", "Apagador", "Giz", "Quadro", "Mapa", "Globo", "Chaveiro", "Capacete", "Bolsa", "Carteira", "Guarda-chuva", "Botão", "Zíper", "Agulha", "Linha", "Alfinete", "Cinto", "Meia", "Luva", "Cachecol", "Chapéu", "Boné", "Vassoura", "Pá", "Rodo", "Esponja", "Sabonete", "Shampoo", "Escova", "Pente", "Secador", "Alicate", "Trena", "Parafuso", "Prego", "Porca", "Pneu", "Bateria", "Lanterna", "Bússola", "Binóculos", "Telescópio", "Microscópio", "Termômetro", "Sino", "Tambor", "Flauta", "Violão", "Piano", "Fones", "Caixa de Som", "Câmera", "Filme", "Tripé", "Controle", "Pilhas"],
+            "Veículos": ["Carro", "Bicicleta", "Avião", "Barco", "Trem", "Ônibus", "Moto", "Caminhão", "Trator", "Submarino", "Helicóptero", "Jato", "Veleiro", "Lancha", "Canoa", "Jet Ski", "Patins", "Skate", "Patinete", "Monociclo", "Balão", "Dirigível", "Foguete", "Nave Espacial", "Satelite", "Drone", "Máquina de Costura", "Retroescavadeira", "Guindaste", "Empilhadeira", "Ambulância", "Viaturas", "Taxi", "Van", "Reboque", "Carreta", "Tanque", "Jipe", "Carro de Mão", "Carrinho de Golfe", "Teleférico", "Gondola", "Bondinho", "Metrô", "Triciclo", "Quadriciclo", "Rollers", "Hoverboard", "Trotinete", "Cadeirinha", "Boia", "Prancha", "Caiaque", "Bote", "Transatlântico", "Fragata", "Cruzador", "Navio Negreiro", "Galeão", "Barca", "Tuk Tuk", "Riquixá", "Carruagem", "Charrete", "Sled", "Mula", "Camelo", "Jangada", "Draga", "Balsa", "Monotrilho", "Locomotiva", "Vagão", "Trem Bala", "Ferry", "Snowmobile", "Buggy", "Off-road", "Conversível", "Pickup", "Sedan", "Hatch", "SUV", "Crossover", "Minivan", "Roadster", "Coupe", "Limousine", "Motorhome", "Trailer"],
+            "Animais": ["Cachorro", "Gato", "Elefante", "Leão", "Tigre", "Girafa", "Macaco", "Panda", "Coelho", "Esquilo", "Peixe", "Tubarão", "Baleia", "Golfinho", "Polvo", "Estrela do Mar", "Caranguejo", "Camarão", "Tartaruga", "Cobra", "Lagarto", "Jacaré", "Crocodilo", "Sapo", "Rã", "Pássaro", "Águia", "Coruja", "Pombo", "Galinha", "Pato", "Ganso", "Peru", "Boi", "Vaca", "Cavalo", "Ovelha", "Cabra", "Porco", "Rato", "Morcego", "Urso", "Lobo", "Raposa", "Cervo", "Veado", "Zebra", "Rinoceronte", "Hipopótamo", "Lhama", "Alpaca", "Canguru", "Coala", "Pinguim", "Foca", "Morsa", "Chimpanzé", "Gorila", "Orangotango", "Gibão", "Formiga", "Abelha", "Borboleta", "Aranha", "Mosquito", "Joaninha", "Louva-a-Deus", "Gafanhoto", "Vespa", "Libélula", "Escorpião", "Centopeia", "Minhoca", "Lesma", "Caracol", "Grilo", "Besouro", "Barata", "Traça", "Pulga", "Corvo", "Gralha", "Papagaio", "Arara", "Canário", "Calopsita", "Curió", "Beija-flor", "Pelicano", "Flamingo", "Tatu", "Capivara", "Quati", "Jaguatirica", "Mico", "Tamanduá", "Bicho-preguiça", "Piranha", "Surubim", "Dourado"],
+            "Comida": ["Pizza", "Hambúrguer", "Batata Frita", "Sorvete", "Chocolate", "Bolo", "Pão", "Queijo", "Ovo", "Leite", "Café", "Chá", "Suco", "Água", "Refrigerante", "Frango", "Carne", "Peixe", "Salada", "Tomate", "Cenoura", "Batata", "Arroz", "Feijão", "Macarrão", "Sopa", "Melancia", "Banana", "Maçã", "Laranja", "Uva", "Manga", "Morango", "Abacaxi", "Limão", "Azeite", "Vinagre", "Sal", "Açúcar", "Pimenta", "Alho", "Cebola", "Brocolis", "Couve", "Milho", "Ervilha", "Torta", "Cookie", "Donut", "Panqueca", "Waffle", "Gelatina", "Pudim", "Mousse", "Iogurte", "Cereal", "Mingau", "Geleia", "Manteiga", "Torrada", "Bacon", "Salsicha", "Presunto", "Pastel", "Coxinha", "Kibe", "Empada", "Sanduíche", "Wrap", "Taco", "Burrito", "Sushi", "Sashimi", "Temaki", "Noodle", "Ramen", "Pipoca", "Amendoim", "Castanha", "Nozes", "Pistache", "Caju", "Gengibre", "Canela", "Manjericão", "Orégano", "Alecrim", "Páprica", "Curry", "Açafrão", "Tapioca", "Cuscuz", "Pamonha", "Churros", "Brigadeiro", "Beijinho", "Quindim", "Doce de Leite", "Goiabada", "Pé-de-Moleque"],
+            "Lugares": ["Casa", "Escola", "Parque", "Praia", "Montanha", "Floresta", "Deserto", "Rio", "Lago", "Oceano", "Hospital", "Banco", "Correio", "Delegacia", "Igreja", "Templo", "Shopping", "Cinema", "Teatro", "Museu", "Biblioteca", "Livraria", "Padaria", "Restaurante", "Supermercado", "Academia", "Piscina", "Estádio", "Quadra", "Aeroporto", "Porto", "Estação", "Rodoviária", "Ponte", "Túnel", "Prisão", "Fábrica", "Escritório", "Laboratório", "Rua", "Avenida", "Praça", "Jardim", "Terraço", "Varanda", "Sótão", "Porão", "Garagem", "Cozinha", "Banheiro", "Quarto", "Sala", "Corredor", "Elevador", "Escada Rolante", "Cabana", "Tenda", "Castelo", "Palácio", "Pirâmide", "Torre", "Farol", "Vulcão", "Caverna", "Ilha", "Península", "Cânion", "Geleira", "Pântano", "Vila", "Cidade", "Capital", "Província", "Continente", "País", "Planeta", "Lua", "Sol", "Galáxia", "Universo", "Posto de Gasolina", "Hotel", "Motel", "Pousada", "Resort", "Acampamento", "Refúgio", "Posto de Saúde", "Clínica", "Farmácia", "Galerias", "Feira", "Mercado", "Confeitaria", "Açougue", "Sapataria", "Loja de Roupas", "Pet Shop", "Floricultura", "Oficina"]
+        };
+        let availableWords = []; 
+
+        // Flood Fill e Canvas logic
+        function hexToRgba(hex) {
+            const shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
+            hex = hex.replace(shorthandRegex, (m, r, g, b) => r + r + g + g + b + b);
+            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result ? [parseInt(result[1], 16), parseInt(result[2], 16), parseInt(result[3], 16), 255] : [0, 0, 0, 255];
+        }
+
+        function floodFill(startX, startY) { 
+            const fillRgba = hexToRgba(color);
+            if (!ctx) return;
+            const canvasWidth = canvas.width;
+            const canvasHeight = canvas.height;
+            const imageData = ctx.getImageData(0, 0, canvasWidth, canvasHeight);
+            const getIndex = (x, y) => (y * canvasWidth + x) * 4;
+            const pixelIndex = getIndex(startX, startY);
+
+            if (startX < 0 || startX >= canvasWidth || startY < 0 || startY >= canvasHeight) return;
+
+            const targetR = imageData.data[pixelIndex];
+            const targetG = imageData.data[pixelIndex + 1];
+            const targetB = imageData.data[pixelIndex + 2];
+            const targetA = imageData.data[pixelIndex + 3];
+
+            if (targetR === fillRgba[0] && targetG === fillRgba[1] && targetB === fillRgba[2] && targetA === fillRgba[3]) return;
+
+            const stack = [[startX, startY]];
+            const matchColor = (index) => 
+                imageData.data[index] === targetR && imageData.data[index + 1] === targetG && imageData.data[index + 2] === targetB && imageData.data[index + 3] === targetA;
+
+            const setColor = (index) => {
+                imageData.data[index] = fillRgba[0];
+                imageData.data[index + 1] = fillRgba[1];
+                imageData.data[index + 2] = fillRgba[2];
+                imageData.data[index + 3] = fillRgba[3];
+            };
+
+            while (stack.length) {
+                let [x, y] = stack.pop();
+                let index = getIndex(x, y);
+
+                if (x >= 0 && x < canvasWidth && y >= 0 && y < canvasHeight && matchColor(index)) {
+                    setColor(index);
+                    stack.push([x + 1, y]);
+                    stack.push([x - 1, y]);
+                    stack.push([x, y + 1]);
+                    stack.push([x, y - 1]);
+                }
+            }
+            ctx.putImageData(imageData, 0, 0);
+        }
+
+        // --- Funções de Utilitário ---
+
+        function selectNewWord() {
+            if (availableWords.length === 0) {
+                gameState.selectedThemes.forEach(theme => { 
+                    availableWords.push(...WORD_CATEGORIES[theme]); 
+                });
+                availableWords.sort(() => Math.random() - 0.5);
+            }
+            const randomIndex = Math.floor(Math.random() * availableWords.length);
+            const word = availableWords[randomIndex];
+            availableWords.splice(randomIndex, 1); 
+            return word;
+        }
+
+        function normalizeText(text) {
+            return text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, ''); 
+        }
+
+        function checkGuess(guess, secretWord) {
+            const normalizedGuess = normalizeText(guess);
+            const normalizedSecret = normalizeText(secretWord);
+            
+            if (normalizedGuess === normalizedSecret) return true;
+            if (normalizedSecret.includes(normalizedGuess) && normalizedGuess.length >= 3) return true;
+            if (normalizedGuess.includes(normalizedSecret) && normalizedSecret.length >= 3) return true;
+
+            return false;
+        }
+
+        function getRoundTime() {
+            const option = gameState.timeOption;
+            if (option === 'random') {
+                const times = [10, 30, 60];
+                return times[Math.floor(Math.random() * times.length)];
+            }
+            return parseInt(option, 10);
+        }
+        
+        // --- Setup e Lógica de Jogo ---
+
+        function setRoundMode(mode, button) {
+            gameState.roundMode = mode;
+            document.querySelectorAll('#round-mode-selector .select-pill').forEach(btn => btn.classList.remove('active'));
+            button.classList.add('active');
+        }
+
+        function setTimeOption(time, button) {
+            gameState.timeOption = time;
+            document.querySelectorAll('#time-selector .select-pill').forEach(btn => btn.classList.remove('active'));
+            button.classList.add('active');
+        }
+        
+        function calculateTotalRounds() {
+            const numPlayers = gameState.players.length;
+            const numTimes = parseInt(document.getElementById('num-rounds-slider').value, 10);
+            
+            if (gameState.roundMode === 'per_player') {
+                gameState.totalRounds = numPlayers * numTimes;
+                gameState.numRoundsPerPlayer = numTimes;
+            } else { 
+                gameState.totalRounds = numTimes;
+                gameState.numRoundsPerPlayer = Math.ceil(numTimes / numPlayers);
+            }
+        }
+
+        function getNextDrawerId() {
+            const numPlayers = gameState.players.length;
+            if (gameState.roundMode === 'alternated') {
+                gameState.drawerIndex = (gameState.currentRound - 1) % numPlayers;
+                return gameState.players[gameState.drawerIndex].id;
+            } else { 
+                gameState.players.forEach(p => { if (!gameState.drawerHistory[p.id]) gameState.drawerHistory[p.id] = 0; });
+                const eligibleDrawers = gameState.players.filter(p => gameState.drawerHistory[p.id] < gameState.numRoundsPerPlayer);
+                if (eligibleDrawers.length === 0) return null; 
+                eligibleDrawers.sort((a, b) => {
+                    const countA = gameState.drawerHistory[a.id];
+                    const countB = gameState.drawerHistory[b.id];
+                    if (countA !== countB) return countA - countB;
+                    return a.id.localeCompare(b.id);
+                });
+                const nextDrawer = eligibleDrawers[0];
+                gameState.drawerHistory[nextDrawer.id]++;
+                return nextDrawer.id;
+            }
+        }
+
+        function startGame() {
+            // Removendo erros de setup antes de iniciar
+            if (gameState.players.length < 2 || gameState.selectedThemes.length === 0) {
+                 document.getElementById('setup-error').textContent = "Mínimo 2 jogadores e 1 tema selecionado são necessários.";
+                 document.getElementById('setup-error').classList.remove('hidden');
+                 return;
+            }
+            document.getElementById('setup-error').classList.add('hidden');
+            
+            availableWords = [];
+            gameState.selectedThemes.forEach(theme => { availableWords.push(...WORD_CATEGORIES[theme]); });
+            availableWords.sort(() => Math.random() - 0.5);
+
+            calculateTotalRounds();
+            gameState.players.forEach(p => { p.score = 0; p.guessesLeft = 3; p.errors = 0; }); 
+            gameState.players.sort(() => Math.random() - 0.5); 
+            gameState.drawerHistory = {};
+
+            document.getElementById('setup-screen').classList.add('hidden');
+            document.getElementById('drawing-screen').classList.remove('hidden');
+
+            canvas = document.getElementById('drawing-canvas');
+            ctx = canvas.getContext('2d');
+            resizeCanvas();
+            setupCanvasListeners();
+
+            document.getElementById('total-rounds-display').textContent = gameState.totalRounds;
+            
+            setTimeout(startNextRound, 50); 
+        }
+
+        function startNextRound() {
+            if (gameState.currentRound >= gameState.totalRounds) return endGame();
+
+            document.getElementById('round-end-screen').classList.add('hidden');
+            document.getElementById('guessing-screen').classList.add('hidden');
+            document.getElementById('drawing-screen').classList.remove('hidden');
+
+            gameState.isDrawingPhase = true;
+            gameState.currentRound++;
+            document.getElementById('current-round-display').textContent = gameState.currentRound;
+
+            gameState.drawerId = getNextDrawerId();
+
+            if (!gameState.drawerId) return endGame(); 
+            
+            const drawer = gameState.players.find(p => p.id === gameState.drawerId);
+            gameState.wordToDraw = selectNewWord(); 
+            gameState.playersWhoGuessed = new Set();
+            gameState.hasDrawerScored = false;
+            
+            document.getElementById('drawer-name').textContent = drawer.name;
+            gameState.players.forEach(p => { p.guessesLeft = 3; p.errors = 0; }); 
+            
+            clearCanvas();
+            renderScoreBoard();
+            
+            // Fluxo de revelação: 1. Sua Vez -> 2. Palavra Secreta -> 3. Desenho
+            showTurnReveal(drawer.name);
+        }
+
+        function showTurnReveal(drawerName) {
+             document.getElementById('turn-drawer-name').textContent = drawerName;
+             document.getElementById('turn-reveal-overlay').style.display = 'grid';
+
+             setTimeout(() => {
+                 document.getElementById('turn-reveal-overlay').style.display = 'none';
+                 drawPhaseReveal();
+             }, 1500);
+        }
+        
+        function drawPhaseReveal() {
+            document.getElementById('secret-word-overlay').textContent = gameState.wordToDraw;
+            
+            // Exibe o tempo de desenho total abaixo da palavra
+            document.getElementById('drawing-time-display').textContent = getRoundTime() + 's'; 
+            
+            document.getElementById('word-reveal-overlay').style.display = 'grid'; 
+            
+            let revealTime = REVEAL_TIME;
+            const revealTimerEl = document.getElementById('reveal-timer');
+            revealTimerEl.textContent = revealTime;
+            
+            const roundStartTime = Date.now();
+            
+            const revealTimerInterval = setInterval(() => {
+                revealTime--;
+                revealTimerEl.textContent = revealTime;
+                
+                if (revealTime <= 0) {
+                    clearInterval(revealTimerInterval);
+                    document.getElementById('word-reveal-overlay').style.display = 'none'; 
+                    startDrawingPhase(roundStartTime);
+                }
+            }, 1000);
+        }
+
+        function startDrawingPhase(roundStartTime) {
+            gameState.isDrawingPhase = true;
+            gameState.timeStart = roundStartTime;
+            document.getElementById('drawing-controls').classList.remove('opacity-50', 'pointer-events-none');
+
+            gameState.timeLeft = getRoundTime();
+            document.getElementById('timer-display').textContent = gameState.timeLeft;
+
+            gameState.timer = setInterval(updateTimer, 1000);
+        }
+
+        function updateTimer() {
+            gameState.timeLeft--;
+            document.getElementById('timer-display').textContent = gameState.timeLeft;
+
+            if (gameState.timeLeft <= 0) {
+                endDrawingPhase();
+            }
+        }
+        
+        function endDrawingPhase() {
+            if (gameState.timer) {
+                clearInterval(gameState.timer);
+            }
+            if (!gameState.isDrawingPhase) return;
+            
+            gameState.isDrawingPhase = false;
+            
+            const timeElapsed = Date.now() - gameState.timeStart;
+            const roundDuration = getRoundTime() * 1000;
+            gameState.timeLeft = Math.max(0, Math.ceil((roundDuration - timeElapsed) / 1000));
+            
+            // 1. Captura o desenho final
+            canvasDrawingData = canvas.toDataURL();
+
+            // 2. Muda para a tela de adivinhação
+            document.getElementById('drawing-screen').classList.add('hidden');
+            document.getElementById('guessing-screen').classList.remove('hidden');
+
+            // 3. Renderiza o desenho na nova tela
+            const finalCanvas = document.getElementById('final-drawing-canvas');
+            const finalCtx = finalCanvas.getContext('2d');
+            
+            const tempImg = new Image();
+            tempImg.onload = function() {
+                // CORREÇÃO: Resizing robusto para a tela final (Anti-corte)
+                const rect = finalCanvas.parentNode.getBoundingClientRect();
+                const aspectRatio = tempImg.width / tempImg.height;
+                finalCanvas.width = rect.width;
+                finalCanvas.height = rect.width / aspectRatio;
+                finalCtx.drawImage(tempImg, 0, 0, finalCanvas.width, finalCanvas.height);
+                finalCanvas.dataset.hasImage = 'true';
+            };
+            tempImg.src = canvasDrawingData;
+            
+            // 4. Habilita palpites
+            renderGuesserInputs(); 
+        }
+
+        function forceEndRound() {
+            const allDone = gameState.players
+                .filter(p => p.id !== gameState.drawerId)
+                .every(p => p.guessesLeft <= 0 || gameState.playersWhoGuessed.has(p.id));
+            
+            if (!allDone) {
+                 gameState.players.filter(p => p.id !== gameState.drawerId && !gameState.playersWhoGuessed.has(p.id)).forEach(p => p.guessesLeft = 0);
+            }
+            endRound();
+        }
+
+        function handleGuess(event, playerId, isButton) {
+            let input;
+            
+            if (isButton) {
+                // Chamado pelo botão
+                input = document.getElementById(`guess-${playerId}`);
+                // Não precisa verificar 'Enter', mas garantimos que o campo exista
+            } else if (event.key !== 'Enter') {
+                return;
+            } else {
+                // Chamado pela tecla Enter
+                input = event.target;
+            }
+            
+            const guess = input.value.trim();
+            if (!guess) return; 
+
+            const player = gameState.players.find(p => p.id === playerId);
+            if (!player || player.guessesLeft <= 0 || gameState.playersWhoGuessed.has(playerId)) return;
+            
+            input.value = ''; // Limpa o input imediatamente
+
+            if (checkGuess(guess, gameState.wordToDraw)) {
+                
+                const timeBonus = gameState.timeLeft * SCORE_BONUS_PER_SEC;
+                let totalScore = SCORE_GUESSER_BASE + timeBonus;
+                let perfectBonus = 0;
+
+                if (player.errors === 0) {
+                    perfectBonus = SCORE_PERFECT_GUESS;
+                    totalScore += perfectBonus;
+                }
+
+                player.score += totalScore;
+                gameState.playersWhoGuessed.add(playerId);
+                
+                if (!gameState.hasDrawerScored) {
+                    const drawer = gameState.players.find(p => p.id === gameState.drawerId);
+                    if (drawer) {
+                        drawer.score += SCORE_DRAWER;
+                        gameState.hasDrawerScored = true;
+                    }
+                }
+
+                // Feedback de acerto
+                input.value = `ACERTOU! (+${totalScore})`;
+                input.disabled = true;
+                input.classList.add('bg-green-500/50', 'disabled-guess');
+                document.getElementById(`guesses-left-${playerId}`).textContent = `(ACERTOU!)`;
+                document.getElementById(`guess-btn-${playerId}`).disabled = true;
+                
+                renderScoreBoard();
+                
+                const numGuessers = gameState.players.length - 1;
+                if (gameState.playersWhoGuessed.size >= numGuessers) endRound();
+
+            } else {
+                // LÓGICA DE ERRO CORRIGIDA E MELHORADA
+                player.score -= SCORE_PENALTY; 
+                player.guessesLeft--;
+                player.errors++; 
+                
+                // Feedback visual de erro LIMPO
+                const originalPlaceholder = input.placeholder;
+                input.placeholder = `❌ ERROU! (-${SCORE_PENALTY} pts)`;
+                input.classList.add('bg-red-500/50', 'placeholder-red-400', 'font-bold');
+                
+                setTimeout(() => {
+                    input.classList.remove('bg-red-500/50', 'placeholder-red-400', 'font-bold');
+                    if (player.guessesLeft > 0) input.placeholder = originalPlaceholder;
+                }, 1500);
+
+                renderScoreBoard();
+                
+                document.getElementById(`guesses-left-${playerId}`).textContent = `(${player.guessesLeft} Chutes)`;
+                
+                if (player.guessesLeft <= 0) {
+                    input.disabled = true;
+                    input.placeholder = 'SEM CHUTES RESTANTES!';
+                    input.classList.add('disabled-guess');
+                    document.getElementById(`guess-btn-${playerId}`).disabled = true;
+                }
+
+                const allDone = gameState.players
+                    .filter(p => p.id !== gameState.drawerId)
+                    .every(p => p.guessesLeft <= 0 || gameState.playersWhoGuessed.has(p.id));
+                
+                if (allDone) endRound();
+            }
+        }
+        
+        function endRound() {
+            if (gameState.timer) clearInterval(gameState.timer);
+            
+            document.getElementById('guessing-screen').classList.add('hidden');
+            document.getElementById('drawing-screen').classList.add('hidden');
+            document.getElementById('round-end-screen').classList.remove('hidden');
+
+            document.getElementById('final-word').textContent = gameState.wordToDraw;
+            
+            const drawer = gameState.players.find(p => p.id === gameState.drawerId);
+            const correctList = document.getElementById('correct-guesses-list');
+            correctList.innerHTML = '';
+            
+            // --- PONTUAÇÃO DO DESENHISTA ---
+            document.getElementById('drawer-name-end').textContent = drawer.name;
+            const drawerScoreEarnedEl = document.getElementById('drawer-score-earned');
+            if (gameState.hasDrawerScored) {
+                 drawerScoreEarnedEl.innerHTML = `<span class="text-green-400 font-extrabold">+${SCORE_DRAWER} pts</span>`;
+            } else {
+                 drawerScoreEarnedEl.innerHTML = `<span class="text-gray-400 font-extrabold">+0 pts</span>`;
+            }
+
+            // --- PONTUAÇÃO DOS ADIVINHOS E PENALIDADES ---
+            const guessers = gameState.players.filter(p => p.id !== gameState.drawerId);
+
+            guessers.forEach(player => {
+                const li = document.createElement('li');
+                li.className = "flex justify-between items-center p-3 rounded-md";
+
+                if (gameState.playersWhoGuessed.has(player.id)) {
+                    const timeBonus = Math.max(0, gameState.timeLeft) * SCORE_BONUS_PER_SEC;
+                    const baseScore = SCORE_GUESSER_BASE;
+                    const perfectBonus = player.errors === 0 ? SCORE_PERFECT_GUESS : 0;
+                    const totalScore = baseScore + timeBonus + perfectBonus;
+                    
+                    li.className += " bg-green-900/50 border border-green-600";
+                    li.innerHTML = `
+                        <span class="font-bold text-white">${player.name}</span>
+                        <span class="flex items-center space-x-3">
+                            <span class="text-xs text-yellow-400 font-bold hidden sm:inline-block">${baseScore} Base</span>
+                            <span class="text-xs text-blue-400 font-bold hidden sm:inline-block">+${timeBonus} Tempo</span>
+                            ${perfectBonus > 0 ? `<span class="text-pink-400 font-bold text-xs hidden sm:inline-block">+${perfectBonus} PERFEITO</span>` : ''}
+                            <span class="text-green-500 font-extrabold text-xl">+${totalScore}</span>
+                        </span>
+                    `;
+                } else {
+                    const penalties = player.errors * SCORE_PENALTY;
+                    
+                    li.className += " bg-red-900/50 border border-red-600";
+                    li.innerHTML = `
+                        <span class="font-semibold text-red-300">${player.name} (Errou)</span>
+                        <span class="text-red-400 font-extrabold text-xl">-${penalties}</span>
+                    `;
+                }
+                correctList.appendChild(li);
+            });
+            
+            if (gameState.playersWhoGuessed.size === 0) {
+                 correctList.innerHTML = '<li class="text-red-500 text-center py-4">Ninguém acertou esta palavra.</li>';
+            }
+            
+            renderScoreBoard();
+        }
+
+        function endGame() {
+            document.getElementById('game-screen').classList.add('hidden');
+            document.getElementById('round-end-screen').classList.add('hidden');
+            document.getElementById('guessing-screen').classList.add('hidden');
+            document.getElementById('game-end-screen').classList.remove('hidden');
+
+            const ranking = [...gameState.players].sort((a, b) => b.score - a.score);
+
+            const rankingDiv = document.getElementById('final-ranking');
+            rankingDiv.innerHTML = '';
+            
+            ranking.forEach((player, index) => {
+                const rankItem = document.createElement('div');
+                let bgColor = index === 0 ? 'bg-yellow-700' : 'bg-gray-800';
+                let rankLabel = index === 0 ? '🥇 1º Lugar' : `${index + 1}º Lugar`;
+
+                rankItem.className = `flex justify-between items-center p-4 rounded-xl font-bold shadow-lg ${bgColor} transform hover:scale-[1.02] transition duration-200`;
+                rankItem.innerHTML = `<span class="text-lg text-purple-300">${rankLabel}</span><span class="text-xl text-white">${player.name}</span><span class="text-2xl text-accent-color font-extrabold">${player.score}</span>`;
+                rankingDiv.appendChild(rankItem);
+            });
+        }
+        
+        function nextRound() {
+            startNextRound();
+        }
+
+        // --- Funções de Interface (Desenho, Inputs, Placar) ---
+        function setupCanvasListeners() {
+            const events = {
+                'mousedown': startDrawing, 'mousemove': draw, 'mouseup': stopDrawing, 'mouseout': stopDrawing,
+                'touchstart': startDrawing, 'touchmove': draw, 'touchend': stopDrawing
+            };
+            for (const type in events) {
+                canvas.addEventListener(type, events[type], { passive: type.startsWith('touchmove') ? false : true });
+            }
+            document.getElementById('color-picker').addEventListener('input', (e) => { color = e.target.value; });
+            window.addEventListener('resize', resizeCanvas);
+            setMode('pen');
+        }
+
+        function resizeCanvas() {
+            const container = document.getElementById('canvas-container');
+            
+            if (container && canvas) {
+                const rect = container.getBoundingClientRect();
+                const imgData = ctx ? ctx.getImageData(0, 0, canvas.width, canvas.height) : null;
+                
+                // Aspect ratio fixo para o desenho (4:3)
+                const aspectRatio = 4 / 3;
+
+                canvas.width = rect.width;
+                canvas.height = rect.width / aspectRatio; 
+                
+                ctx.lineJoin = 'round';
+                ctx.lineCap = 'round';
+                if (imgData) { ctx.putImageData(imgData, 0, 0); } else { clearCanvas(); }
+            }
+            
+            // CORREÇÃO FINAL: Redimensionamento do desenho final (final-drawing-canvas)
+            const finalCanvas = document.getElementById('final-drawing-canvas');
+            if (finalCanvas && finalCanvas.dataset.hasImage === 'true') {
+                 const finalCtx = finalCanvas.getContext('2d');
+                 const tempImg = new Image();
+                 tempImg.onload = function() {
+                     const rect = finalCanvas.parentNode.getBoundingClientRect();
+                     const aspectRatio = tempImg.width / tempImg.height;
+                     finalCanvas.width = rect.width;
+                     finalCanvas.height = rect.width / aspectRatio;
+                     finalCtx.drawImage(tempImg, 0, 0, finalCanvas.width, finalCanvas.height);
+                 };
+                 tempImg.src = canvasDrawingData;
+            }
+        }
+        function draw(e) {
+             if (!isDrawing || !gameState.isDrawingPhase || mode === 'fill') return;
+            let clientX, clientY;
+            if (e.touches) { clientX = e.touches[0].clientX; clientY = e.touches[0].clientY; e.preventDefault(); } else { clientX = e.clientX; clientY = e.clientY; }
+            const rect = canvas.getBoundingClientRect();
+            let newX = clientX - rect.left;
+            let newY = clientY - rect.top;
+            ctx.beginPath();
+            if (mode === 'pen') { ctx.strokeStyle = color; ctx.lineWidth = size; } 
+            else if (mode === 'eraser') { ctx.strokeStyle = '#ffffff'; ctx.lineWidth = size * 2; }
+            ctx.moveTo(lastX, lastY);
+            ctx.lineTo(newX, newY);
+            ctx.stroke();
+            [lastX, lastY] = [newX, newY];
+        }
+        function startDrawing(e) {
+            if (!gameState.isDrawingPhase || gameState.drawerId !== gameState.players.find(p => p.id === gameState.drawerId)?.id || gameState.timeLeft <= 0) return;
+            let clientX, clientY;
+            if (e.touches) { clientX = e.touches[0].clientX; clientY = e.touches[0].clientY; } else { clientX = e.clientX; clientY = e.clientY; }
+            const rect = canvas.getBoundingClientRect();
+            const startX = Math.floor(clientX - rect.left);
+            const startY = Math.floor(clientY - rect.top);
+            if (mode === 'fill') { floodFill(startX, startY); } 
+            else { isDrawing = true; [lastX, lastY] = [startX, startY]; draw(e); }
+        }
+        function stopDrawing() { isDrawing = false; }
+        function setMode(newMode) {
+            mode = newMode;
+            document.querySelectorAll('.tool-btn').forEach(btn => {
+                btn.classList.remove('active', 'bg-blue-700', 'bg-yellow-500', 'bg-red-600');
+                if (btn.id === newMode + '-btn') {
+                    btn.classList.add('active');
+                    if (newMode === 'pen') btn.classList.add('bg-blue-700');
+                    if (newMode === 'eraser') btn.classList.add('bg-yellow-500');
+                    if (newMode === 'fill') btn.classList.add('bg-red-600');
+                } else {
+                    if (btn.id === 'pen-btn') btn.classList.add('bg-blue-600', 'hover:bg-blue-700');
+                    if (btn.id === 'eraser-btn') btn.classList.add('bg-yellow-400', 'hover:bg-yellow-500');
+                    if (btn.id === 'fill-btn') btn.classList.add('bg-red-500', 'hover:bg-red-600');
+                }
+            });
+        }
+        function setSize(newSize) {
+            // Lógica do Slider
+            size = parseInt(newSize, 10);
+            document.getElementById('brush-size-slider').value = size;
+            document.getElementById('brush-size-value').textContent = size;
+        }
+        function clearCanvas() {
+            if (ctx) {
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            }
+        }
+        function renderGuesserInputs() {
+            const container = document.getElementById('guesser-inputs');
+            container.innerHTML = '';
+            const guessers = gameState.players.filter(p => p.id !== gameState.drawerId);
+            guessers.forEach(player => {
+                const inputDiv = document.createElement('div');
+                inputDiv.className = 'flex flex-col gap-1'; 
+                
+                const isDisabled = player.guessesLeft <= 0 || gameState.playersWhoGuessed.has(player.id);
+                
+                inputDiv.innerHTML = `
+                    <span class="font-bold text-base text-gray-100">${player.name} <span id="guesses-left-${player.id}" class="text-red-400 text-xs font-bold"> (${player.guessesLeft} Chutes)</span>:</span>
+                    
+                    <div class="flex gap-2">
+                        <input type="text" id="guess-${player.id}" data-player-id="${player.id}"
+                               class="guesser-input input-text-dark flex-grow p-3 rounded-xl focus:ring-2 focus:ring-green-500 disabled:opacity-70 disabled:bg-gray-700 shadow-inner placeholder-gray-500"
+                               placeholder="Seu palpite. (Enter)"
+                               onkeyup="if(event.key === 'Enter') handleGuess(event, '${player.id}', false)"
+                               ${isDisabled ? 'disabled' : ''}>
+                        
+                        <button onclick="handleGuess(event, '${player.id}', true)" 
+                                id="guess-btn-${player.id}"
+                                class="px-3 py-2 bg-accent-color text-white rounded-xl font-bold hover:bg-green-700 transition duration-200 shadow-md text-sm whitespace-nowrap"
+                                ${isDisabled ? 'disabled' : ''}>
+                            Palpite
+                        </button>
+                    </div>
+                `;
+                container.appendChild(inputDiv);
+                
+                // Define o placeholder correto se estiver desabilitado no início
+                if (isDisabled) {
+                    const inputEl = document.getElementById(`guess-${player.id}`);
+                    if (gameState.playersWhoGuessed.has(player.id)) {
+                        inputEl.placeholder = 'ACERTOU!';
+                    } else {
+                        inputEl.placeholder = 'SEM CHUTES RESTANTES!';
+                    }
+                }
+            });
+        }
+        function renderScoreBoard() {
+            const board = document.getElementById('score-board');
+            board.innerHTML = '';
+            const sortedPlayers = [...gameState.players].sort((a, b) => b.score - a.score);
+            sortedPlayers.forEach(player => {
+                const scoreItem = document.createElement('div');
+                const isDrawer = player.id === gameState.drawerId;
+                scoreItem.className = `flex justify-between items-center p-3 rounded-lg ${isDrawer ? 'bg-blue-900 font-bold border border-blue-600' : 'bg-gray-800'} shadow-sm`;
+                scoreItem.innerHTML = `<span class="text-gray-100 truncate">${player.name} ${isDrawer ? '🎨' : ''}</span><span class="text-xl text-accent-color font-extrabold">${player.score}</span>`;
+                board.appendChild(scoreItem);
+            });
+        }
+        
+        // --- Funções de suporte para o immersive ---
+        function removePlayer(id) { gameState.players = gameState.players.filter(p => p.id !== id); updateSetupState(); renderPlayerList(); }
+        function renderPlayerList() {
+            const playerListDiv = document.getElementById('player-list');
+            playerListDiv.innerHTML = '';
+            gameState.players.forEach(player => {
+                const chip = document.createElement('div');
+                chip.className = 'flex items-center bg-blue-800 text-blue-200 text-sm font-semibold px-4 py-2 rounded-full shadow-sm transition duration-200';
+                chip.innerHTML = `<span>${player.name}</span><button onclick="removePlayer('${player.id}')" class="ml-2 text-blue-200 hover:text-red-400 transition duration-150 font-bold text-lg leading-none">&times;</button>`;
+                playerListDiv.appendChild(chip);
+            });
+        }
+        function updateSetupState() {
+            const numPlayers = gameState.players.length;
+            const hasThemes = gameState.selectedThemes.length > 0;
+            const canStart = numPlayers >= 2 && numPlayers <= 10 && hasThemes;
+            document.getElementById('start-game-btn').disabled = !canStart;
+            document.getElementById('setup-error').classList.toggle('hidden', canStart);
+        }
+        function renderThemeSelection() {
+            const themeSelectionDiv = document.getElementById('theme-selection');
+            themeSelectionDiv.innerHTML = '';
+            Object.keys(WORD_CATEGORIES).forEach(theme => {
+                const isActive = gameState.selectedThemes.includes(theme);
+                const button = document.createElement('button');
+                button.value = theme;
+                button.textContent = theme;
+                button.type = 'button'; 
+                button.onclick = () => {
+                    const index = gameState.selectedThemes.indexOf(theme);
+                    if (index > -1) { gameState.selectedThemes.splice(index, 1); } 
+                    else { gameState.selectedThemes.push(theme); }
+                    renderThemeSelection(); 
+                    updateSetupState();
+                };
+                button.className = `toggle-btn px-4 py-2 rounded-full text-sm font-semibold shadow-md whitespace-nowrap transition duration-200 ${isActive ? 'bg-blue-600 text-white hover:bg-blue-700 active' : 'bg-gray-700 text-gray-100 hover:bg-gray-600'}`;
+                themeSelectionDiv.appendChild(button);
+            });
+        }
+        function addPlayer() {
+            const name = document.getElementById('new-player-name').value.trim();
+            if (name && gameState.players.length < 10) {
+                const newPlayer = { name: name, score: 0, id: Date.now().toString() + Math.random().toString(16).substring(2, 5), guessesLeft: 3, errors: 0 };
+                gameState.players.push(newPlayer);
+                document.getElementById('new-player-name').value = '';
+                renderPlayerList();
+                updateSetupState();
+            }
+        }
+
+        window.onload = () => {
+            const initialSetup = () => {
+                document.body.classList.add('dark');
+                document.documentElement.classList.add('dark');
+
+                renderPlayerList();
+                renderThemeSelection();
+                updateSetupState();
+
+                setTimeOption('30', document.querySelector('#time-selector button[data-time="30"]'));
+                setRoundMode('alternated', document.querySelector('#round-mode-selector button[data-mode="alternated"]'));
+            };
+            initialSetup();
+        };
+
+    </script>
+</body>
+</html>
