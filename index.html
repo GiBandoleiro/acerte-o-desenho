@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<!-- Favicon (Ícone da Aba) -->
-    <link rel="icon" type="image/png" href="logoPincel.png">
-    <title>Desenhe e Adivinhe - App Store Ready</title>
+    <!-- Favicon (Ícone da Aba) -->
+    <link rel="icon" type="image/png" href="https://placehold.co/32x32/3b82f6/white?text=A">
+    <title>Acerte o desenho</title>
     <!-- Carrega Tailwind CSS para estilização -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -40,6 +40,7 @@
             align-items: flex-start;
             min-height: 100vh; 
             padding: 1.5rem 0;
+            padding-bottom: 6rem; /* Espaço para o rodapé fixo */
         }
         .container {
             max-width: 1300px;
@@ -150,6 +151,27 @@
     </style>
 </head>
 <body class="selection:bg-blue-600 selection:text-white">
+<!-- Rodapé com informações do desenvolvedor -->
+<div id="developer-footer" class="fixed bottom-0 left-0 right-0 z-50 w-full text-center py-4 bg-gray-800 shadow-lg text-white">  
+  <p class="text-sm flex justify-center items-center gap-4 flex-wrap px-2">  
+    <span>Desenvolvido por Giovanni Fuentes Giannetti:</span>
+    <!-- Instagram -->  
+    <a href="https://instagram.com/giovanni.fg" target="_blank" class="text-pink-400 hover:text-pink-300 flex items-center gap-1">  
+      <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" class="w-5 h-5">  
+        <path d="M12 2.2c3.2 0 3.6 0 4.9.1 1.2.1 1.9.3 2.3.5.6.2 1 .6 1.4 1.1.4.4.9 1 1.1 1.6.2.4.4 1.1.5 2.3.1 1.3.1 1.7.1 4.9s0 3.6-.1 4.9c-.1 1.2-.3 1.9-.5 2.3-.2.6-.6 1-1.1 1.4-.4.4-1 .9-1.6 1.1-.4.2-1.1.4-2.3.5-1.3.1-1.7.1-4.9.1s-3.6 0-4.9-.1c-1.2-.1-1.9-.3-2.3-.5-.6-.2-1-.6-1.4-1.1-.4-.4-.9-1-1.1-1.6-.2-.4-.4-1.1-.5-2.3C2.2 15.6 2.2 15.2 2.2 12s0-3.6.1-4.9c.1-1.2.3-1.9.5-2.3.2-.6.6-1 1.1-1.4.4-.4 1-.9 1.6-1.1.4-.2 1.1.4 2.3.5C8.4 2.2 8.8 2.2 12 2.2m0-2.2C8.7 0 8.3 0 7 .1 5.7.2 4.7.4 4 .7c-.9.4-1.7 1-2.4 1.7C.9 3.1.3 3.9 0 4.8c-.3.7-.5 1.7-.6 3C-.7 9 .7 9.3.7 12s0 3 .1 4.2c.1 1.3.3 2.3.6 3 .3.9.9 1.7 1.6 2.4.7.7 1.5 1.3 2.4 1.6.7.3 1.7.5 3 .6 1.2.1 1.6.1 4.9.1s3.6 0 4.9-.1c1.3-.1 2.3-.3 3-.6.9-.3 1.7-.9 2.4-1.6.7-.7 1.3-1.5 1.6-2.4.3-.7.5-1.7.6-3 .1-1.2.1-1.6.1-4.9s0-3.6-.1-4.9c-.1-1.3-.3-2.3-.6-3-.3-.9-.9-1.7-1.6-2.4C21.1 1.6 20.3 1 19.4.7c-.7-.3-1.7-.5-3-.6C15.6 0 15.2 0 12 0z"/>  
+        <path d="M12 5.8a6.2 6.2 0 1 0 0 12.4A6.2 6.2 0 0 0 12 5.8zm0 10.2a4 4 0 1 1 0-8.1 4 4 0 0 1 0 8.1zM18.4 4.6a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3z"/>  
+      </svg>  
+      @giovanni.fg  
+    </a>  
+    <!-- LinkedIn -->  
+    <a href="https://linkedin.com/in/giovanni-fg" target="_blank" class="text-blue-400 hover:text-blue-300 flex items-center gap-1">  
+      <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" class="w-5 h-5">  
+        <path d="M4.98 3.5C4.98 5 3.9 6 2.5 6S0 5 0 3.5 1.12 1 2.5 1s2.48 1 2.48 2.5zM.5 8h4V24h-4V8zM8.5 8h3.8v2.2h.1c.5-.9 1.8-1.9 3.7-1.9 3.9 0 4.6 2.5 4.6 5.7V24h-4v-7.8c0-1.9 0-4.4-2.7-4.4-2.7 0-3.1 2.1-3.1 4.2V24h-4V8z"/>  
+      </svg>  
+      giovanni-fg  
+    </a>  
+  </p>  
+</div>
 
     <!-- Overlay 1: Sua Vez (Aparece Primeiro) -->
     <div id="turn-reveal-overlay">
@@ -177,7 +199,7 @@
         
         <!-- Header com Título (Centralizado) -->
         <header class="flex justify-center items-center mb-8 border-b pb-4 border-gray-700 w-full">
-            <h1 class="text-3xl lg:text-4xl font-extrabold text-primary-color tracking-wider text-center">DRAW & GUESS PRO</h1>
+            <h1 class="text-3xl lg:text-4xl font-extrabold text-primary-color tracking-wider text-center">ACERTE O DESENHO</h1>
         </header>
 
         <!-- 1. Tela de Configuração (Alinhada e Minimalista) -->
@@ -338,9 +360,6 @@
                     <!-- Campos de palpite são injetados aqui -->
                 </div>
             </div>
-            <button onclick="forceEndRound()" class="mt-5 bg-red-600 text-white p-3 rounded-xl font-bold hover:bg-red-700 transition duration-200 shadow-lg text-base">
-                Encerrar Rodada (Todos desistiram)
-            </button>
         </div>
 
 
@@ -577,7 +596,7 @@
         }
 
         function startGame() {
-            // Removendo erros de setup antes de iniciar
+            // Validação para iniciar o jogo
             if (gameState.players.length < 2 || gameState.selectedThemes.length === 0) {
                  document.getElementById('setup-error').textContent = "Mínimo 2 jogadores e 1 tema selecionado são necessários.";
                  document.getElementById('setup-error').classList.remove('hidden');
@@ -585,6 +604,9 @@
             }
             document.getElementById('setup-error').classList.add('hidden');
             
+            // Esconde o rodapé ao iniciar
+            document.getElementById('developer-footer').style.display = 'none';
+
             availableWords = [];
             gameState.selectedThemes.forEach(theme => { availableWords.push(...WORD_CATEGORIES[theme]); });
             availableWords.sort(() => Math.random() - 0.5);
@@ -732,24 +754,12 @@
             renderGuesserInputs(); 
         }
 
-        function forceEndRound() {
-            const allDone = gameState.players
-                .filter(p => p.id !== gameState.drawerId)
-                .every(p => p.guessesLeft <= 0 || gameState.playersWhoGuessed.has(p.id));
-            
-            if (!allDone) {
-                 gameState.players.filter(p => p.id !== gameState.drawerId && !gameState.playersWhoGuessed.has(p.id)).forEach(p => p.guessesLeft = 0);
-            }
-            endRound();
-        }
-
         function handleGuess(event, playerId, isButton) {
             let input;
             
             if (isButton) {
                 // Chamado pelo botão
                 input = document.getElementById(`guess-${playerId}`);
-                // Não precisa verificar 'Enter', mas garantimos que o campo exista
             } else if (event.key !== 'Enter') {
                 return;
             } else {
@@ -899,9 +909,11 @@
         }
 
         function endGame() {
-            document.getElementById('game-screen').classList.add('hidden');
+            // Esconde todas as telas de jogo para garantir
+            document.getElementById('drawing-screen').classList.add('hidden');
             document.getElementById('round-end-screen').classList.add('hidden');
             document.getElementById('guessing-screen').classList.add('hidden');
+            // Mostra a tela de fim de jogo
             document.getElementById('game-end-screen').classList.remove('hidden');
 
             const ranking = [...gameState.players].sort((a, b) => b.score - a.score);
@@ -962,11 +974,11 @@
                  const finalCtx = finalCanvas.getContext('2d');
                  const tempImg = new Image();
                  tempImg.onload = function() {
-                     const rect = finalCanvas.parentNode.getBoundingClientRect();
-                     const aspectRatio = tempImg.width / tempImg.height;
-                     finalCanvas.width = rect.width;
-                     finalCanvas.height = rect.width / aspectRatio;
-                     finalCtx.drawImage(tempImg, 0, 0, finalCanvas.width, finalCanvas.height);
+                      const rect = finalCanvas.parentNode.getBoundingClientRect();
+                      const aspectRatio = tempImg.width / tempImg.height;
+                      finalCanvas.width = rect.width;
+                      finalCanvas.height = rect.width / aspectRatio;
+                      finalCtx.drawImage(tempImg, 0, 0, finalCanvas.width, finalCanvas.height);
                  };
                  tempImg.src = canvasDrawingData;
             }
@@ -987,7 +999,7 @@
             [lastX, lastY] = [newX, newY];
         }
         function startDrawing(e) {
-            if (!gameState.isDrawingPhase || gameState.drawerId !== gameState.players.find(p => p.id === gameState.drawerId)?.id || gameState.timeLeft <= 0) return;
+            if (!gameState.isDrawingPhase || gameState.timeLeft <= 0) return;
             let clientX, clientY;
             if (e.touches) { clientX = e.touches[0].clientX; clientY = e.touches[0].clientY; } else { clientX = e.clientX; clientY = e.clientY; }
             const rect = canvas.getBoundingClientRect();
@@ -1079,7 +1091,7 @@
             });
         }
         
-        // --- Funções de suporte para o immersive ---
+        // --- Funções de suporte para o setup ---
         function removePlayer(id) { gameState.players = gameState.players.filter(p => p.id !== id); updateSetupState(); renderPlayerList(); }
         function renderPlayerList() {
             const playerListDiv = document.getElementById('player-list');
